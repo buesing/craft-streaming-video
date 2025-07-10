@@ -44,8 +44,8 @@ class Plugin extends \craft\base\Plugin
                         'type' => Type::string(),
                         'description' => 'HLS master playlist URL for streaming video',
                         'resolve' => function($source) {
-                            if ($source instanceof Asset && $source->hasMethod('getStreamingVideo')) {
-                                return $source->getStreamingVideo()->getHlsPlaylistUrl();
+                            if ($source instanceof Asset && $source->hasMethod('getHlsPlaylistUrl')) {
+                                return $source->getHlsPlaylistUrl();
                             }
                             return null;
                         },
