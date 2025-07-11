@@ -73,51 +73,53 @@ ddev restart
 #### Basic Video Player
 
 ```twig
-{# Get your video asset #}
-{% set video = entry.videoField.one() %}
-
-{# Check if HLS streaming is available #}
-{% if video and video.streamingVideo.hlsPlaylistUrl %}
-    {# Use the built-in player template #}
-    {% include '@streamingvideo/_player.twig' with {
-        asset: video,
-        id: 'my-video-player'
-    } %}
+{% set video = entry.video.one() %}
+{% if video and video.hlsPlaylistUrl %}
+    {% include '_streamingvideo/player.twig' with { asset: video } %}
 {% else %}
-    {# Fallback to regular video #}
     <video controls>
         <source src="{{ video.url }}" type="{{ video.mimeType }}">
     </video>
 {% endif %}
 ```
 
-#### Custom Implementation
+#### All Player Options
+
+The player template supports the following options (all optional):
+
+| Option                   | Type                | Default | Description                                                      |
+|--------------------------|---------------------|---------|------------------------------------------------------------------|
+| `asset`                  | Asset               | —       | The Craft Asset element (required)                               |
+| `autoplay`               | bool                | false   | Autoplay the video                                               |
+| `muted`                  | bool                | false   | Mute the video                                                   |
+| `loop`                   | bool                | false   | Loop the video                                                   |
+| `playsinline`            | bool                | false   | Play inline on mobile devices                                    |
+| `poster`                 | Asset or string     | null    | Craft Asset (uses its URL) or a URL string for the poster image  |
+| `classname`              | string              | ''      | CSS class(es) for the video element                              |
+| `disablepictureinpicture`| bool                | false   | Disable Picture-in-Picture button                                |
+| `id`                     | string              | random  | The video element's ID (random if not provided)                  |
+
+**Example:**
 
 ```twig
-{% set video = entry.videoField.one() %}
-{% set playlistUrl = video.streamingVideo.hlsPlaylistUrl %}
+{# Using a Craft Asset as poster #}
+{% include '@streamingvideo/player.twig' with {
+  asset: entry.video.one(),
+  poster: entry.posterImage.one(),
+  autoplay: true,
+  muted: true,
+  loop: false,
+  playsinline: true,
+  classname: 'rounded shadow',
+  disablepictureinpicture: true,
+  id: 'my-custom-video-player'
+} %}
 
-{% if playlistUrl %}
-    <video id="hls-video" controls>
-        <source src="{{ playlistUrl }}" type="application/vnd.apple.mpegurl">
-        Your browser does not support HLS streaming.
-    </video>
-
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script>
-        const video = document.getElementById('hls-video');
-        
-        if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Native HLS support (Safari)
-            video.src = "{{ playlistUrl }}";
-        } else if (window.Hls) {
-            // Use HLS.js for other browsers
-            const hls = new Hls();
-            hls.loadSource("{{ playlistUrl }}");
-            hls.attachMedia(video);
-        }
-    </script>
-{% endif %}
+{# Using a URL as poster #}
+{% include '@streamingvideo/player.twig' with {
+  asset: entry.video.one(),
+  poster: 'https://example.com/poster.jpg'
+} %}
 ```
 
 ### GraphQL
@@ -141,14 +143,10 @@ query {
 ### Checking Stream Availability
 
 ```twig
-{% set video = entry.videoField.one() %}
-
-{# Check if the asset can be streamed #}
-{% if video.streamingVideo.canStreamVideo %}
+{% set video = entry.video.one() %}
+{% if video.canStreamVideo %}
     <p>This video supports streaming</p>
-    
-    {# Check if HLS files are ready #}
-    {% if video.streamingVideo.hlsPlaylistUrl %}
+    {% if video.hlsPlaylistUrl %}
         <p>HLS streaming is available</p>
     {% else %}
         <p>HLS encoding in progress...</p>

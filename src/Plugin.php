@@ -20,7 +20,7 @@ class Plugin extends \craft\base\Plugin
             View::class,
             View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
             function(RegisterTemplateRootsEvent $event) {
-                $event->roots['streamingvideo'] = __DIR__ . '/templates';
+                $event->roots['_streamingvideo'] = __DIR__ . '/templates';
             }
         );
 
