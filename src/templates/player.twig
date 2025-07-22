@@ -8,25 +8,29 @@
 {% set classname = classname ?? '' %}
 {% set disablepictureinpicture = disablepictureinpicture ?? false %}
 
-{% if playlistUrl %}
-  <video
-    id="{{ videoId }}"
-    controls
-    {% if autoplay %}autoplay{% endif %}
-    {% if muted %}muted{% endif %}
-    {% if loop %}loop{% endif %}
-    {% if playsinline %}playsinline{% endif %}
-    {% if poster is not null %}
-      poster="{{ poster is instance of('craft\\elements\\Asset') ? poster.getUrl() : poster }}"
-    {% endif %}
-    {% if disablepictureinpicture %}disablepictureinpicture{% endif %}
-    class="{{ classname }}"
-  >
+<video
+  id="{{ videoId }}"
+  controls
+  {% if autoplay %}autoplay{% endif %}
+  {% if muted %}muted{% endif %}
+  {% if loop %}loop{% endif %}
+  {% if playsinline %}playsinline{% endif %}
+  {% if poster is not null %}
+    poster="{{ poster is instance of('craft\\elements\\Asset') ? poster.getUrl() : poster }}"
+  {% endif %}
+  {% if disablepictureinpicture %}disablepictureinpicture{% endif %}
+  class="{{ classname }}"
+>
+  {% if playlistUrl %}
     <source src="{{ playlistUrl }}" type="application/vnd.apple.mpegurl">
-    Your browser does not support the video tag.
-  </video>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script>
+  {% else %}
+    <source src="{{ asset.url }}" type="{{ asset.mimeType }}">
+  {% endif %} 
+  Your browser does not support the video tag.
+</video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+  {% if playlistUrl %}
     document.addEventListener('DOMContentLoaded', function() {
       var video = document.getElementById('{{ videoId }}');
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -41,7 +45,7 @@
         console.error('HLS is not supported in this browser');
       }
     });
-  </script>
-{% else %}
-  <p>No HLS playlist available.</p>
-{% endif %} 
+  {% else %}
+    console.warn('No playlist URL for video {{ asset.url }}.')
+  {% endif %} 
+</script>

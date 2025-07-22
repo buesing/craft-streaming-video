@@ -171,6 +171,20 @@ The plugin generates the following quality variants by default:
 
 *Note: Only variants with resolution ≤ source video are generated*
 
+### Processing Existing Videos
+
+If you're adding this plugin to an existing site with video assets, you'll need to resave all existing video assets to trigger HLS conversion:
+
+```bash
+# Standard Craft installation
+php craft resave/assets
+
+# Using DDEV
+ddev craft resave/assets
+```
+
+This will process all existing video assets and generate HLS streaming variants in the background.
+
 ## Troubleshooting
 
 ### FFmpeg Not Found
