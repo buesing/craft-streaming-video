@@ -1,4 +1,5 @@
 <?php
+
 namespace buesing\streamingvideo\migrations;
 
 use craft\db\Migration;

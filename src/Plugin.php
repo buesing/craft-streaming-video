@@ -1,20 +1,19 @@
 <?php
+
 namespace buesing\streamingvideo;
 
-use craft\events\DefineGqlTypeFieldsEvent;
-use craft\gql\TypeManager;
-use GraphQL\Type\Definition\Type;
-use craft\events\RegisterTemplateRootsEvent;
-use craft\events\RegisterComponentTypesEvent;
-use craft\services\Fields;
-use craft\web\View;
-use craft\elements\Asset;
-use craft\base\Element;
-use craft\events\DefineMetadataEvent;
-use yii\base\Event;
 use buesing\streamingvideo\records\ConversionStatusRecord;
 use Craft;
+use craft\base\Element;
+use craft\elements\Asset;
+use craft\events\DefineGqlTypeFieldsEvent;
+use craft\events\DefineMetadataEvent;
+use craft\events\RegisterTemplateRootsEvent;
+use craft\gql\TypeManager;
+use craft\web\View;
+use GraphQL\Type\Definition\Type;
 use mikehaertl\shellcommand\Command;
+use yii\base\Event;
 
 class Plugin extends \craft\base\Plugin
 {
@@ -30,18 +29,17 @@ class Plugin extends \craft\base\Plugin
         \yii\base\Event::on(
             View::class,
             View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
-            function(RegisterTemplateRootsEvent $event) {
-                $event->roots['_streamingvideo'] = __DIR__ . '/templates';
+            function (RegisterTemplateRootsEvent $event) {
+                $event->roots['_streamingvideo'] = __DIR__.'/templates';
             }
         );
-
 
         Event::on(
             \craft\elements\Asset::class,
             \craft\elements\Asset::EVENT_DEFINE_BEHAVIORS,
-            static function(\craft\events\DefineBehaviorsEvent $event) {
+            static function (\craft\events\DefineBehaviorsEvent $event) {
                 $event->behaviors['streamingVideo'] = [
-                    'class' => \buesing\streamingvideo\StreamingVideoBehavior::class
+                    'class' => \buesing\streamingvideo\StreamingVideoBehavior::class,
                 ];
             }
         );
@@ -49,16 +47,17 @@ class Plugin extends \craft\base\Plugin
         Event::on(
             TypeManager::class,
             TypeManager::EVENT_DEFINE_GQL_TYPE_FIELDS,
-            function(DefineGqlTypeFieldsEvent $event) {
+            function (DefineGqlTypeFieldsEvent $event) {
                 if ($event->typeName === 'AssetInterface') {
                     $event->fields['hlsPlaylistUrl'] = [
                         'name' => 'hlsPlaylistUrl',
                         'type' => Type::string(),
                         'description' => 'HLS master playlist URL for streaming video',
-                        'resolve' => function($source) {
+                        'resolve' => function ($source) {
                             if ($source instanceof Asset && $source->hasMethod('getHlsPlaylistUrl')) {
                                 return $source->getHlsPlaylistUrl();
                             }
+
                             return null;
                         },
                     ];
@@ -80,7 +79,7 @@ class Plugin extends \craft\base\Plugin
         try {
             $command = new Command('ffmpeg -version');
             $command->execute();
-            
+
             if ($command->getExitCode() !== 0) {
                 $this->showFFmpegWarning();
             }
@@ -110,23 +109,23 @@ class Plugin extends \craft\base\Plugin
 
         // Only add metadata for video assets that can be streamed
         if ($asset->canStreamVideo()) {
-            $event->metadata['Streaming Status'] = function() use ($asset) {
+            $event->metadata['Streaming Status'] = function () use ($asset) {
                 $hlsUrl = $asset->getHlsPlaylistUrl();
                 if ($hlsUrl) {
                     return '<span class="status green"></span> HLS Ready';
                 }
-                
+
                 // Check conversion status from database
                 $statusRecord = ConversionStatusRecord::findByAssetId($asset->id);
                 if ($statusRecord) {
-                    return match($statusRecord->status) {
+                    return match ($statusRecord->status) {
                         'processing' => '<span class="status orange"></span> Processing...',
                         'failed' => '<span class="status red"></span> Failed',
                         'completed' => '<span class="status green"></span> HLS Ready',
                         default => '<span class="status grey"></span> Queued'
                     };
                 }
-                
+
                 return '<span class="status grey"></span> Queued';
             };
         }

@@ -1,4 +1,5 @@
 <?php
+
 namespace buesing\streamingvideo\records;
 
 use craft\db\ActiveRecord;
@@ -18,8 +19,8 @@ class ConversionStatusRecord extends ActiveRecord
     public static function setStatus(int $assetId, string $status): void
     {
         $record = static::findByAssetId($assetId);
-        if (!$record) {
-            $record = new static();
+        if (! $record) {
+            $record = new static;
             $record->assetId = $assetId;
         }
         $record->status = $status;

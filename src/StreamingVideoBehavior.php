@@ -1,12 +1,11 @@
 <?php
+
 namespace buesing\streamingvideo;
 
-use yii\base\Behavior;
-use craft\elements\Asset;
-use mikehaertl\shellcommand\Command;
-use craft\helpers\FileHelper;
-use Craft;
 use buesing\streamingvideo\records\ConversionStatusRecord;
+use Craft;
+use craft\elements\Asset;
+use yii\base\Behavior;
 
 class StreamingVideoBehavior extends Behavior
 {
@@ -20,6 +19,7 @@ class StreamingVideoBehavior extends Behavior
         if ($this->owner instanceof Asset) {
             return strpos($this->owner->mimeType, 'video/') === 0;
         }
+
         return false;
     }
 
@@ -28,25 +28,26 @@ class StreamingVideoBehavior extends Behavior
      */
     public function getHlsPlaylistUrl(): ?string
     {
-        if (!$this->canStreamVideo()) {
+        if (! $this->canStreamVideo()) {
             return null;
         }
 
         $status = ConversionStatusRecord::findByAssetId($this->owner->id);
-        if (!$status || $status->status !== 'completed') {
+        if (! $status || $status->status !== 'completed') {
             return null;
         }
 
         $volume = $this->owner->getVolume();
         $baseUrl = $volume->getRootUrl();
-        if (!$baseUrl) {
+        if (! $baseUrl) {
             return null;
         }
-        
-        $hlsPath = '__hls__/' . $this->owner->uid . '/master.m3u8';
-        return rtrim($baseUrl, '/') . '/' . ltrim($hlsPath, '/');
+
+        $hlsPath = '__hls__/'.$this->owner->uid.'/master.m3u8';
+
+        return rtrim($baseUrl, '/').'/'.ltrim($hlsPath, '/');
     }
-    
+
     /**
      * Alias for getHlsPlaylistUrl for use as a property in Twig/GraphQL.
      */
@@ -54,7 +55,6 @@ class StreamingVideoBehavior extends Behavior
     {
         return $this->getHlsPlaylistUrl();
     }
-
 
     public function events()
     {
@@ -95,41 +95,41 @@ class StreamingVideoBehavior extends Behavior
         try {
             $volume = $this->owner->getVolume();
             $fs = $volume->getFs();
-            $hlsPath = '__hls__/' . $this->owner->uid . '/';
-            
+            $hlsPath = '__hls__/'.$this->owner->uid.'/';
+
             Craft::info("Attempting to clean up HLS files at path: {$hlsPath}", __METHOD__);
-            
+
             // List all files in the HLS directory for this asset
             try {
                 $files = $fs->getFileList($hlsPath);
                 $deletedCount = 0;
-                
+
                 foreach ($files as $file) {
                     try {
-                        $fs->deleteFile($hlsPath . $file['basename']);
+                        $fs->deleteFile($hlsPath.$file['basename']);
                         $deletedCount++;
                         Craft::info("Deleted file: {$hlsPath}{$file['basename']}", __METHOD__);
                     } catch (\Exception $e) {
-                        Craft::warning("Could not delete {$hlsPath}{$file['basename']}: " . $e->getMessage(), __METHOD__);
+                        Craft::warning("Could not delete {$hlsPath}{$file['basename']}: ".$e->getMessage(), __METHOD__);
                     }
                 }
-                
+
                 Craft::info("Deleted {$deletedCount} files from {$hlsPath}", __METHOD__);
             } catch (\Exception $e) {
-                Craft::warning("Could not list contents of HLS directory {$hlsPath}: " . $e->getMessage(), __METHOD__);
+                Craft::warning("Could not list contents of HLS directory {$hlsPath}: ".$e->getMessage(), __METHOD__);
             }
-            
+
             // Try to remove the directory itself
             try {
                 $fs->deleteDirectory($hlsPath);
                 Craft::info("Deleted HLS directory: {$hlsPath}", __METHOD__);
             } catch (\Exception $e) {
-                Craft::warning("Could not delete HLS directory {$hlsPath}: " . $e->getMessage(), __METHOD__);
+                Craft::warning("Could not delete HLS directory {$hlsPath}: ".$e->getMessage(), __METHOD__);
             }
-            
+
             Craft::info("HLS cleanup completed for asset {$this->owner->id}", __METHOD__);
         } catch (\Exception $e) {
-            Craft::error("Failed to clean up HLS files for asset {$this->owner->id}: " . $e->getMessage(), __METHOD__);
+            Craft::error("Failed to clean up HLS files for asset {$this->owner->id}: ".$e->getMessage(), __METHOD__);
         }
     }
-} 
+}
