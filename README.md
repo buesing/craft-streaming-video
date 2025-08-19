@@ -2,6 +2,10 @@
 
 A Craft CMS plugin that automatically generates HLS (HTTP Live Streaming) variants for video assets, enabling adaptive streaming with multiple quality levels.
 
+The plugin handles generating the variants, and includes a basic template that renders the video using [hls.js](https://github.com/video-dev/hls.js/). It doesn't apply any styling to the video, that is left up to the developer. You can also use GraphQL to handle the entire frontend yourself.
+
+This is useful for websites hosting longer videos, which don't want to use video services to embed videos due to privacy or design concerns.
+
 ## Features
 
 - 🎥 **Automatic HLS Generation**: Converts uploaded videos to HLS format with multiple quality variants
@@ -63,7 +67,7 @@ ddev restart
 1. **Upload Detection**: When a video asset is uploaded or saved, the plugin automatically detects it
 2. **Queue Processing**: An HLS preparation job is queued to avoid blocking the upload
 3. **Quality Generation**: FFmpeg generates multiple quality variants based on the source resolution
-4. **File Storage**: HLS files are stored in a hidden `__hls__/{asset-uid}/` folder in the same volume
+4. **File Storage**: HLS files are stored in a separate `__hls__/{asset-uid}/` folder in the same volume
 5. **Cleanup**: When an asset is deleted, all associated HLS files are automatically removed
 
 ## Usage
@@ -140,6 +144,9 @@ query {
 }
 ```
 
+The field will only be available once all variants have finished
+rendering. Until then, you can show a fallback or the original video.
+
 ### Checking Stream Availability
 
 ```twig
@@ -155,6 +162,10 @@ query {
 ```
 
 ## Configuration
+
+### Storage Volumes
+
+When using S3 or other external storage volumes, ensure CORS access is properly configured for HLS streaming to work correctly. See [AWS S3 CORS configuration guide](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enabling-cors-examples.html).
 
 ### Quality Variants
 

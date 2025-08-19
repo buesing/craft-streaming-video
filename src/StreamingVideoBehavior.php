@@ -6,6 +6,7 @@ use craft\elements\Asset;
 use mikehaertl\shellcommand\Command;
 use craft\helpers\FileHelper;
 use Craft;
+use buesing\streamingvideo\records\ConversionStatusRecord;
 
 class StreamingVideoBehavior extends Behavior
 {
@@ -27,11 +28,21 @@ class StreamingVideoBehavior extends Behavior
      */
     public function getHlsPlaylistUrl(): ?string
     {
+        if (!$this->canStreamVideo()) {
+            return null;
+        }
+
+        $status = ConversionStatusRecord::findByAssetId($this->owner->id);
+        if (!$status || $status->status !== 'completed') {
+            return null;
+        }
+
         $volume = $this->owner->getVolume();
         $baseUrl = $volume->getRootUrl();
         if (!$baseUrl) {
             return null;
         }
+        
         $hlsPath = '__hls__/' . $this->owner->uid . '/master.m3u8';
         return rtrim($baseUrl, '/') . '/' . ltrim($hlsPath, '/');
     }
@@ -43,6 +54,7 @@ class StreamingVideoBehavior extends Behavior
     {
         return $this->getHlsPlaylistUrl();
     }
+
 
     public function events()
     {
@@ -56,6 +68,7 @@ class StreamingVideoBehavior extends Behavior
     {
         $asset = $this->owner;
         if ($this->canStreamVideo()) {
+            ConversionStatusRecord::setStatus($asset->id, 'pending');
             \Craft::$app->queue->push(new \buesing\streamingvideo\PrepareHlsJob([
                 'assetId' => $asset->id,
             ]));
@@ -67,6 +80,10 @@ class StreamingVideoBehavior extends Behavior
         $asset = $this->owner;
         if ($this->canStreamVideo() && $asset->uid) {
             $this->cleanupHlsFiles();
+            $status = ConversionStatusRecord::findByAssetId($asset->id);
+            if ($status) {
+                $status->delete();
+            }
         }
     }
 

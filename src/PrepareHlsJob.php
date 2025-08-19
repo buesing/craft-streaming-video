@@ -4,6 +4,7 @@ namespace buesing\streamingvideo;
 use craft\queue\BaseJob;
 use craft\elements\Asset;
 use Craft;
+use buesing\streamingvideo\records\ConversionStatusRecord;
 
 class PrepareHlsJob extends BaseJob
 {
@@ -14,6 +15,7 @@ class PrepareHlsJob extends BaseJob
         $asset = Asset::find()->id($this->assetId)->one();
         if (!$asset) {
             Craft::error("PrepareHlsJob: Asset not found for ID {$this->assetId}", __METHOD__);
+            ConversionStatusRecord::setStatus($this->assetId, 'failed');
             return;
         }
         if (!$asset->canStreamVideo()) {
@@ -21,11 +23,14 @@ class PrepareHlsJob extends BaseJob
             return;
         }
 
+        ConversionStatusRecord::setStatus($this->assetId, 'processing');
+
         $inputPath = $asset->getCopyOfFile();
         $baseName = pathinfo($asset->filename, PATHINFO_FILENAME);
         $tempDir = Craft::$app->getPath()->getTempPath() . DIRECTORY_SEPARATOR . uniqid('hls_', true);
         if (!@mkdir($tempDir, 0777, true) && !is_dir($tempDir)) {
             Craft::error("Failed to create temp directory: $tempDir", __METHOD__);
+            ConversionStatusRecord::setStatus($this->assetId, 'failed');
             return;
         }
 
@@ -36,6 +41,7 @@ class PrepareHlsJob extends BaseJob
             Craft::error("Failed to detect video resolution for asset {$this->assetId}", __METHOD__);
             \craft\helpers\FileHelper::removeDirectory($tempDir);
             @unlink($inputPath);
+            ConversionStatusRecord::setStatus($this->assetId, 'failed');
             return;
         }
         list($srcWidth, $srcHeight) = array_map('intval', explode(',', $output[0]));
@@ -71,7 +77,7 @@ class PrepareHlsJob extends BaseJob
         $bandwidths = [];
 
         foreach ($variants as $i => $variant) {
-            $this->setProgress($queue, $i / $totalSteps, "Encoding {$variant['name']} stream...");
+            $this->setProgress($queue, min(1, ($i + 1) / $totalSteps), "Encoding {$variant['name']} stream...");
 
             $playlist = "{$variant['name']}.m3u8";
             $segmentPattern = "{$variant['name']}_%03d.ts";
@@ -90,6 +96,7 @@ class PrepareHlsJob extends BaseJob
                 Craft::error("ffmpeg failed: " . $command->getError(), __METHOD__);
                 \craft\helpers\FileHelper::removeDirectory($tempDir);
                 @unlink($inputPath);
+                ConversionStatusRecord::setStatus($this->assetId, 'failed');
                 return;
             }
 
@@ -136,6 +143,8 @@ class PrepareHlsJob extends BaseJob
         fclose($stream);
 
         $this->setProgress($queue, 1, "Master playlist uploaded");
+
+        ConversionStatusRecord::setStatus($this->assetId, 'completed');
 
         \craft\helpers\FileHelper::removeDirectory($tempDir);
         @unlink($inputPath);

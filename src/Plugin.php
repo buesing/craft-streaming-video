@@ -9,13 +9,17 @@ use craft\events\RegisterComponentTypesEvent;
 use craft\services\Fields;
 use craft\web\View;
 use craft\elements\Asset;
+use craft\base\Element;
+use craft\events\DefineMetadataEvent;
 use yii\base\Event;
-use buesing\streamingvideo\fields\StreamingVideoField;
+use buesing\streamingvideo\records\ConversionStatusRecord;
 use Craft;
 use mikehaertl\shellcommand\Command;
 
 class Plugin extends \craft\base\Plugin
 {
+    public string $schemaVersion = '1.0.0';
+
     public function init()
     {
         parent::init();
@@ -31,6 +35,7 @@ class Plugin extends \craft\base\Plugin
             }
         );
 
+
         Event::on(
             \craft\elements\Asset::class,
             \craft\elements\Asset::EVENT_DEFINE_BEHAVIORS,
@@ -38,15 +43,6 @@ class Plugin extends \craft\base\Plugin
                 $event->behaviors['streamingVideo'] = [
                     'class' => \buesing\streamingvideo\StreamingVideoBehavior::class
                 ];
-            }
-        );
-
-        // Register the StreamingVideoField field type
-        Event::on(
-            Fields::class,
-            Fields::EVENT_REGISTER_FIELD_TYPES,
-            function(RegisterComponentTypesEvent $event) {
-                $event->types[] = StreamingVideoField::class;
             }
         );
 
@@ -69,6 +65,14 @@ class Plugin extends \craft\base\Plugin
                 }
             }
         );
+
+        // Add streaming video metadata to asset control panel
+        Event::on(
+            Asset::class,
+            Element::EVENT_DEFINE_METADATA,
+            [$this, 'defineAssetMetadata']
+        );
+
     }
 
     private function checkFFmpegAvailability(): void
@@ -97,5 +101,34 @@ class Plugin extends \craft\base\Plugin
             'FFmpeg is not available on this system. The Streaming Video plugin requires FFmpeg for video processing.',
             'craft-streaming-video'
         );
+    }
+
+    public function defineAssetMetadata(DefineMetadataEvent $event): void
+    {
+        /** @var Asset $asset */
+        $asset = $event->sender;
+
+        // Only add metadata for video assets that can be streamed
+        if ($asset->canStreamVideo()) {
+            $event->metadata['Streaming Status'] = function() use ($asset) {
+                $hlsUrl = $asset->getHlsPlaylistUrl();
+                if ($hlsUrl) {
+                    return '<span class="status green"></span> HLS Ready';
+                }
+                
+                // Check conversion status from database
+                $statusRecord = ConversionStatusRecord::findByAssetId($asset->id);
+                if ($statusRecord) {
+                    return match($statusRecord->status) {
+                        'processing' => '<span class="status orange"></span> Processing...',
+                        'failed' => '<span class="status red"></span> Failed',
+                        'completed' => '<span class="status green"></span> HLS Ready',
+                        default => '<span class="status grey"></span> Queued'
+                    };
+                }
+                
+                return '<span class="status grey"></span> Queued';
+            };
+        }
     }
 }

@@ -35,17 +35,15 @@
       var video = document.getElementById('{{ videoId }}');
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = "{{ playlistUrl }}";
-        console.log('Using native HLS support');
       } else if (window.Hls && Hls.isSupported()) {
         var hls = new Hls();
         hls.loadSource("{{ playlistUrl }}");
         hls.attachMedia(video);
-        console.log('Using HLS.js for video: {{ videoId }}');
       } else {
         console.error('HLS is not supported in this browser');
       }
     });
   {% else %}
-    console.warn('No playlist URL for video {{ asset.url }}.')
+    console.warn('No playlist URL for video {{ asset.url }}. Possibly the video has finished rendering yet.')
   {% endif %} 
 </script>

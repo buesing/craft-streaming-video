@@ -3,8 +3,8 @@
   "description": "Create and view streaming videos using HLS",
   "type": "craft-plugin",
   "version": "0.0.2",
-  "keywords": ["some", "keywords", "here"],
-  "license": "MIT",
+  "keywords": ["video", "streaming", "hls", "optimization"],
+  "license": "proprietary",
   "authors": [
     {
       "name": "Moriz Büsing",
