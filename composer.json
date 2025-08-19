@@ -15,6 +15,7 @@
     "email": "moriz.buesing@gmail.com"
   },
   "require": {
+    "php": ">=8.2",
     "craftcms/cms": "^5.3.0"
   },
   "autoload": {
