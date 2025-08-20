@@ -9,6 +9,16 @@ use craft\queue\BaseJob;
 
 class PrepareHlsJob extends BaseJob
 {
+    private const VARIANT_HEIGHTS = [1080, 720, 480, 240, 144];
+
+    private const HLS_SEGMENT_DURATION = 6;
+
+    private const RETRY_ATTEMPTS = 3;
+
+    private const HLS_DIRECTORY_PREFIX = '__hls__';
+
+    private const MASTER_PLAYLIST_NAME = 'master.m3u8';
+
     public int $assetId;
 
     public function execute($queue): void
@@ -49,9 +59,8 @@ class PrepareHlsJob extends BaseJob
             [$srcWidth, $srcHeight] = array_map('intval', explode(',', $output[0]));
 
             // Define variant heights (can be customized)
-            $variantHeights = [1080, 720, 480, 240, 144];
             $variants = [];
-            foreach ($variantHeights as $h) {
+            foreach (self::VARIANT_HEIGHTS as $h) {
                 if ($srcHeight >= $h) {
                     $variants[] = [
                         'name' => "{$h}p",
@@ -73,7 +82,7 @@ class PrepareHlsJob extends BaseJob
 
             $volume = $asset->getVolume();
             $fs = $volume->getFs();
-            $hlsPath = '__hls__/'.$asset->uid.'/';
+            $hlsPath = self::HLS_DIRECTORY_PREFIX.'/'.$asset->uid.'/';
 
             $actualResolutions = [];
             $bandwidths = [];
@@ -89,7 +98,7 @@ class PrepareHlsJob extends BaseJob
                     .' -c:v libx264 -b:v '.$variant['video_bitrate']
                     .' -c:a aac -b:a '.$variant['audio_bitrate']
                     .' -ac 2 -ar 48000'
-                    .' -hls_time 6 -hls_playlist_type vod'
+                    .' -hls_time '.self::HLS_SEGMENT_DURATION.' -hls_playlist_type vod'
                     .' -hls_segment_filename '.escapeshellarg($tempDir.DIRECTORY_SEPARATOR.$segmentPattern)
                     .' '.escapeshellarg($tempDir.DIRECTORY_SEPARATOR.$playlist);
 
@@ -140,7 +149,7 @@ class PrepareHlsJob extends BaseJob
                 }
                 $masterPlaylist .= "\n{$name}.m3u8\n\n";
             }
-            $masterPath = $tempDir.DIRECTORY_SEPARATOR.'master.m3u8';
+            $masterPath = $tempDir.DIRECTORY_SEPARATOR.self::MASTER_PLAYLIST_NAME;
             file_put_contents($masterPath, $masterPlaylist);
 
             $this->retryOperation(function () use ($masterPath, $fs, $hlsPath) {
@@ -149,7 +158,7 @@ class PrepareHlsJob extends BaseJob
                     throw new \Exception('Failed to open master playlist file for reading');
                 }
 
-                $fs->writeFileFromStream($hlsPath.'master.m3u8', $stream);
+                $fs->writeFileFromStream($hlsPath.self::MASTER_PLAYLIST_NAME, $stream);
 
                 if (is_resource($stream)) {
                     fclose($stream);
@@ -180,20 +189,17 @@ class PrepareHlsJob extends BaseJob
         return 'Rendering video';
     }
 
-    /**
-     * Retry an operation with exponential backoff
-     */
-    private function retryOperation(callable $operation, int $maxRetries = 3): void
+    private function retryOperation(callable $operation): void
     {
         $attempt = 0;
         $lastException = null;
 
-        while ($attempt < $maxRetries) {
+        while ($attempt < self::RETRY_ATTEMPTS) {
             try {
                 $operation();
 
                 return; // Success, exit retry loop
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $attempt++;
                 $lastException = $e;
 

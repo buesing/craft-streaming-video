@@ -9,6 +9,10 @@ use yii\base\Behavior;
 
 class StreamingVideoBehavior extends Behavior
 {
+    private const HLS_DIRECTORY_PREFIX = '__hls__';
+
+    private const MASTER_PLAYLIST_NAME = 'master.m3u8';
+
     /**
      * @var Asset
      */
@@ -17,15 +21,12 @@ class StreamingVideoBehavior extends Behavior
     public function canStreamVideo(): bool
     {
         if ($this->owner instanceof Asset) {
-            return strpos($this->owner->mimeType, 'video/') === 0;
+            return str_starts_with($this->owner->mimeType, 'video/');
         }
 
         return false;
     }
 
-    /**
-     * Returns the public URL to the HLS master playlist for this asset, or null if not available.
-     */
     public function getHlsPlaylistUrl(): ?string
     {
         if (! $this->canStreamVideo()) {
@@ -43,20 +44,17 @@ class StreamingVideoBehavior extends Behavior
             return null;
         }
 
-        $hlsPath = '__hls__/'.$this->owner->uid.'/master.m3u8';
+        $hlsPath = self::HLS_DIRECTORY_PREFIX.'/'.$this->owner->uid.'/'.self::MASTER_PLAYLIST_NAME;
 
         return rtrim($baseUrl, '/').'/'.ltrim($hlsPath, '/');
     }
 
-    /**
-     * Alias for getHlsPlaylistUrl for use as a property in Twig/GraphQL.
-     */
     public function getHlsPlaylistUrlProperty(): ?string
     {
         return $this->getHlsPlaylistUrl();
     }
 
-    public function events()
+    public function events(): array
     {
         return [
             Asset::EVENT_AFTER_SAVE => 'afterSave',
@@ -64,7 +62,7 @@ class StreamingVideoBehavior extends Behavior
         ];
     }
 
-    public function afterSave($event)
+    public function afterSave($event): void
     {
         $asset = $this->owner;
         if ($this->canStreamVideo()) {
@@ -75,7 +73,7 @@ class StreamingVideoBehavior extends Behavior
         }
     }
 
-    public function afterDelete($event)
+    public function afterDelete($event): void
     {
         $asset = $this->owner;
         if ($this->canStreamVideo() && $asset->uid) {
@@ -87,15 +85,12 @@ class StreamingVideoBehavior extends Behavior
         }
     }
 
-    /**
-     * Removes the HLS folder and all its contents for this asset.
-     */
     private function cleanupHlsFiles(): void
     {
         try {
             $volume = $this->owner->getVolume();
             $fs = $volume->getFs();
-            $hlsPath = '__hls__/'.$this->owner->uid.'/';
+            $hlsPath = self::HLS_DIRECTORY_PREFIX.'/'.$this->owner->uid.'/';
 
             Craft::info("Attempting to clean up HLS files at path: {$hlsPath}", __METHOD__);
 

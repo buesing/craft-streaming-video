@@ -19,7 +19,7 @@ class Plugin extends \craft\base\Plugin
 {
     public string $schemaVersion = '1.0.0';
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -83,7 +83,7 @@ class Plugin extends \craft\base\Plugin
             if ($command->getExitCode() !== 0) {
                 $this->showFFmpegWarning();
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->showFFmpegWarning();
         }
     }

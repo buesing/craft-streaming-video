@@ -21,7 +21,7 @@ This is useful for websites hosting longer videos, which don't want to use video
 ## Requirements
 
 - Craft CMS 5.0 or later
-- PHP 8.0 or later
+- PHP 8.2 or later
 - FFmpeg installed on the server
 
 ## Installation

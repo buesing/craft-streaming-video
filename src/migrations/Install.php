@@ -6,7 +6,7 @@ use craft\db\Migration;
 
 class Install extends Migration
 {
-    public function safeUp()
+    public function safeUp(): void
     {
         $this->createTable('{{%streaming_video_conversion_status}}', [
             'id' => $this->primaryKey(),
@@ -30,7 +30,7 @@ class Install extends Migration
         $this->createIndex(null, '{{%streaming_video_conversion_status}}', 'assetId', true);
     }
 
-    public function safeDown()
+    public function safeDown(): void
     {
         $this->dropTableIfExists('{{%streaming_video_conversion_status}}');
     }
