@@ -28,7 +28,9 @@
   {% endif %} 
   Your browser does not support the video tag.
 </video>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+{% if playlistUrl %}
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+{% endif %} 
 <script>
   {% if playlistUrl %}
     document.addEventListener('DOMContentLoaded', function() {

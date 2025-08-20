@@ -111,7 +111,6 @@ class PrepareHlsJob extends BaseJob
                 }
                 // Estimate bandwidth (could be improved by parsing output bitrate)
                 $bandwidths[$variant['name']] = (int) filter_var($variant['video_bitrate'], FILTER_SANITIZE_NUMBER_INT) * 1000;
-
                 // Upload this variant's files immediately with retry logic
                 foreach (glob($tempDir.DIRECTORY_SEPARATOR."{$variant['name']}*") as $file) {
                     $this->retryOperation(function () use ($file, $fs, $hlsPath) {
@@ -119,9 +118,10 @@ class PrepareHlsJob extends BaseJob
                         if (! $stream) {
                             throw new \Exception('Failed to open file for reading: '.basename($file));
                         }
-                        try {
-                            $fs->writeFileFromStream($hlsPath.basename($file), $stream);
-                        } finally {
+
+                        $fs->writeFileFromStream($hlsPath.basename($file), $stream);
+
+                        if (is_resource($stream)) {
                             fclose($stream);
                         }
                     });
@@ -148,9 +148,10 @@ class PrepareHlsJob extends BaseJob
                 if (! $stream) {
                     throw new \Exception('Failed to open master playlist file for reading');
                 }
-                try {
-                    $fs->writeFileFromStream($hlsPath.'master.m3u8', $stream);
-                } finally {
+
+                $fs->writeFileFromStream($hlsPath.'master.m3u8', $stream);
+
+                if (is_resource($stream)) {
                     fclose($stream);
                 }
             });
@@ -159,9 +160,10 @@ class PrepareHlsJob extends BaseJob
 
             ConversionStatusRecord::setStatus($this->assetId, 'completed');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Craft::error("PrepareHlsJob failed for asset {$this->assetId}: ".$e->getMessage(), __METHOD__);
             ConversionStatusRecord::setStatus($this->assetId, 'failed');
+            throw $e;
         } finally {
             // Always cleanup temp files
             if ($tempDir && is_dir($tempDir)) {
