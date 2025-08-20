@@ -70,6 +70,10 @@ ddev restart
 4. **File Storage**: HLS files are stored in a separate `__hls__/{asset-uid}/` folder in the same volume
 5. **Cleanup**: When an asset is deleted, all associated HLS files are automatically removed
 
+### 3. Make sure CORS is enabled
+
+If assets are hosted on another origin than the main site, ensure CORS access is properly configured for HLS streaming to work.
+
 ## Usage
 
 ### Frontend Templates
@@ -162,10 +166,6 @@ rendering. Until then, you can show a fallback or the original video.
 ```
 
 ## Configuration
-
-### CORS
-
-If assets are hosted on another origin than the main site, ensure CORS access is properly configured for HLS streaming to work.
 
 ### Quality Variants
 
