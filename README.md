@@ -163,9 +163,9 @@ rendering. Until then, you can show a fallback or the original video.
 
 ## Configuration
 
-### Storage Volumes
+### CORS
 
-When using S3 or other external storage volumes, ensure CORS access is properly configured for HLS streaming to work correctly. See [AWS S3 CORS configuration guide](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enabling-cors-examples.html).
+If assets are hosted on another origin than the main site, ensure CORS access is properly configured for HLS streaming to work.
 
 ### Quality Variants
 
