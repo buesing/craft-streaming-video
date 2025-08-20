@@ -2,7 +2,7 @@
   "name": "buesing/craft-streaming-video",
   "description": "Create and view streaming videos using HLS",
   "type": "craft-plugin",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "keywords": ["video", "streaming", "hls", "optimization"],
   "license": "proprietary",
   "authors": [
