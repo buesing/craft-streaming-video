@@ -4,7 +4,7 @@ A Craft CMS plugin that automatically generates HLS (HTTP Live Streaming) varian
 
 The plugin handles generating the variants, and includes a basic template that renders the video using [hls.js](https://github.com/video-dev/hls.js/). It doesn't apply any styling to the video, that is left up to the developer. You can also use GraphQL to handle the entire frontend yourself.
 
-This is useful for websites hosting longer videos, which don't want to use video services to embed videos due to privacy or design concerns.
+This plugin is useful for websites hosting longer videos, which don't want to use video services to embed videos due to privacy or design concerns.
 
 ## Features
 
@@ -13,10 +13,8 @@ This is useful for websites hosting longer videos, which don't want to use video
 - 🎛️ **Multiple Quality Levels**: Generates 1080p, 720p, 480p, 240p, and 144p variants (plus source quality)
 - 📐 **Aspect Ratio Preservation**: Maintains original video proportions for any format (not just 16:9)
 - 🔧 **Smart Resolution Detection**: Only generates variants at or below the source video resolution
-- 🗂️ **Clean File Management**: Automatically cleans up HLS files when assets are deleted
 - 🌐 **Cross-Platform Storage**: Works with local storage, AWS S3, and other Craft volume types
 - 🎮 **Frontend Integration**: Includes Twig template and GraphQL support
-- ⚡ **Background Processing**: Uses Craft's queue system for non-blocking video processing
 
 ## Requirements
 
@@ -40,7 +38,7 @@ php craft plugin/install streaming-video
 
 The plugin requires FFmpeg to be installed on your server.
 
-#### DDEV (Recommended for Development)
+#### DDEV
 
 Add to your `.ddev/config.yaml`:
 
@@ -62,17 +60,17 @@ ddev restart
 - **macOS**: `brew install ffmpeg`
 - **Docker**: Include FFmpeg in your container image
 
+### 3. Make sure CORS is enabled
+
+If assets are hosted on another origin than the main site, ensure CORS access is properly configured for HLS streaming to work.
+
 ## How It Works
 
 1. **Upload Detection**: When a video asset is uploaded or saved, the plugin automatically detects it
 2. **Queue Processing**: An HLS preparation job is queued to avoid blocking the upload
-3. **Quality Generation**: FFmpeg generates multiple quality variants based on the source resolution
+3. **Quality Generation**: FFmpeg generates multiple quality variants based on the source resolution. During generation, the template falls back to the normal video file. hlsPlaylistUrl will return `null` during that time.
 4. **File Storage**: HLS files are stored in a separate `__hls__/{asset-uid}/` folder in the same volume
 5. **Cleanup**: When an asset is deleted, all associated HLS files are automatically removed
-
-### 3. Make sure CORS is enabled
-
-If assets are hosted on another origin than the main site, ensure CORS access is properly configured for HLS streaming to work.
 
 ## Usage
 
@@ -93,7 +91,7 @@ If assets are hosted on another origin than the main site, ensure CORS access is
 
 #### All Player Options
 
-The player template supports the following options (all optional):
+The player template supports the following options:
 
 | Option                   | Type                | Default | Description                                                      |
 |--------------------------|---------------------|---------|------------------------------------------------------------------|
@@ -196,6 +194,9 @@ ddev craft resave/assets
 
 This will process all existing video assets and generate HLS streaming variants in the background.
 
+> [!WARNING]  
+> Depending on how many videos you have saved, and how long they are, this can take a long time and use a lot of hard drive space. Make sure to monitor your hard drive when resaving assets.
+
 ## Troubleshooting
 
 ### FFmpeg Not Found
@@ -220,11 +221,11 @@ For very large video files, you may need to:
 
 ### Debug Information
 
-Check Craft's logs at `storage/logs/web.log` for detailed processing information:
+Check Craft's logs at `storage/logs/queue.log` for detailed processing information:
 
 ```bash
 # Follow logs in real-time
-tail -f storage/logs/web.log | grep streamingvideo
+tail -f storage/logs/* | grep streamingvideo
 ```
 
 ## License
