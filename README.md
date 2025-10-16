@@ -96,6 +96,7 @@ The player template supports the following options:
 | Option                   | Type                | Default | Description                                                      |
 |--------------------------|---------------------|---------|------------------------------------------------------------------|
 | `asset`                  | Asset               | —       | The Craft Asset element (required)                               |
+| `controls`               | bool                | true    | Show the video controls                                          |
 | `autoplay`               | bool                | false   | Autoplay the video                                               |
 | `muted`                  | bool                | false   | Mute the video                                                   |
 | `loop`                   | bool                | false   | Loop the video                                                   |

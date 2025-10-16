@@ -7,10 +7,11 @@
 {% set poster = poster ?? null %}
 {% set classname = classname ?? '' %}
 {% set disablepictureinpicture = disablepictureinpicture ?? false %}
+{% set controls = controls ?? true %}
 
 <video
   id="{{ videoId }}"
-  controls
+  {% if controls %}controls{% endif %}
   {% if autoplay %}autoplay{% endif %}
   {% if muted %}muted{% endif %}
   {% if loop %}loop{% endif %}

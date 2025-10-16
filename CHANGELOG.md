@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2025-10-16
+
+### Added
+- Fixed Github issue [#2]: Added `controls` option to player template to allow toggling video controls visibility
+
+[#2]: https://github.com/buesing/craft-streaming-video/issues/2
+
 ## 1.0.0 - 2025-08-20
 
 Initial release!
