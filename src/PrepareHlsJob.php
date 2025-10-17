@@ -82,7 +82,8 @@ class PrepareHlsJob extends BaseJob
 
             $volume = $asset->getVolume();
             $fs = $volume->getFs();
-            $hlsPath = self::HLS_DIRECTORY_PREFIX.'/'.$asset->uid.'/';
+
+            $hlsPath = $volume->subpath.'/'.self::HLS_DIRECTORY_PREFIX.'/'.$asset->uid.'/';
 
             $actualResolutions = [];
             $bandwidths = [];

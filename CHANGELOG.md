@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2025-10-17
+
+### Fixed
+- Fixed [#1]: Volume subpath is now correctly taken into account when generating HLS playlist URLs
+
+[#1]: https://github.com/buesing/craft-streaming-video/issues/1
+
 ## 1.0.1 - 2025-10-16
 
 ### Added
