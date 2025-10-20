@@ -129,6 +129,45 @@ The player template supports the following options:
 } %}
 ```
 
+### Template
+
+If you need more customization, you can copy paste this simple template as a starting point:
+
+```twig
+{% set asset = entry.video.one() %}
+<video id="video">
+  {% if asset.hlsPlaylistUrl %}
+    <source src="{{ asset.hlsPlaylistUrl }}" type="application/vnd.apple.mpegurl">
+  {% else %}
+    <source src="{{ asset.url }}" type="{{ asset.mimeType }}">
+  {% endif %}
+  Your browser does not support the video tag.
+</video>
+{% if asset.hlsPlaylistUrl %}
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+{% endif %}
+<script>
+  {% if asset.hlsPlaylistUrl %}
+    document.addEventListener('DOMContentLoaded', function() {
+      var video = document.getElementById('video');
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // HLS is natively supported (Safari)
+        video.src = "{{ asset.hlsPlaylistUrl }}";
+      } else if (window.Hls && Hls.isSupported()) {
+        // HLS.js is supported
+        var hls = new Hls();
+        hls.loadSource("{{ asset.hlsPlaylistUrl }}");
+        hls.attachMedia(video);
+      } else {
+        console.error('HLS is not supported in this browser');
+      }
+    });
+  {% else %}
+    // Video hasn't finished rendering
+  {% endif %}
+</script>
+```
+
 ### GraphQL
 
 The plugin adds an `hlsPlaylistUrl` field to the Asset GraphQL type:
@@ -195,7 +234,7 @@ ddev craft resave/assets
 
 This will process all existing video assets and generate HLS streaming variants in the background.
 
-> [!WARNING]  
+> [!WARNING]
 > Depending on how many videos you have saved, and how long they are, this can take a long time and use a lot of hard drive space. Make sure to monitor your hard drive when resaving assets.
 
 ## Troubleshooting
@@ -235,4 +274,4 @@ This plugin is licensed under the Craft License.
 
 ## Support
 
-For issues and feature requests, please use the GitHub issue tracker. 
+For issues and feature requests, please use the GitHub issue tracker.

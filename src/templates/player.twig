@@ -26,12 +26,12 @@
     <source src="{{ playlistUrl }}" type="application/vnd.apple.mpegurl">
   {% else %}
     <source src="{{ asset.url }}" type="{{ asset.mimeType }}">
-  {% endif %} 
+  {% endif %}
   Your browser does not support the video tag.
 </video>
 {% if playlistUrl %}
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-{% endif %} 
+{% endif %}
 <script>
   {% if playlistUrl %}
     document.addEventListener('DOMContentLoaded', function() {
@@ -47,6 +47,6 @@
       }
     });
   {% else %}
-    console.warn('No playlist URL for video {{ asset.url }}. Possibly the video has finished rendering yet.')
-  {% endif %} 
+    console.warn('No playlist URL for video {{ asset.url }}. Possibly the video hasn’t finished rendering yet.')
+  {% endif %}
 </script>
