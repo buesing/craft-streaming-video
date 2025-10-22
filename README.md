@@ -110,7 +110,7 @@ The player template supports the following options:
 
 ```twig
 {# Using a Craft Asset as poster #}
-{% include '@streamingvideo/player.twig' with {
+{% include '_streamingvideo/player.twig' with {
   asset: entry.video.one(),
   poster: entry.posterImage.one(),
   autoplay: true,
@@ -123,7 +123,7 @@ The player template supports the following options:
 } %}
 
 {# Using a URL as poster #}
-{% include '@streamingvideo/player.twig' with {
+{% include '_streamingvideo/player.twig' with {
   asset: entry.video.one(),
   poster: 'https://example.com/poster.jpg'
 } %}
@@ -211,12 +211,12 @@ The plugin generates the following quality variants by default:
 
 | Quality | Resolution | Video Bitrate | Audio Bitrate |
 |---------|------------|---------------|---------------|
+| Source  | Original   | 8000k         | 192k          |
 | 1080p   | 1920×1080  | 5000k         | 128k          |
 | 720p    | 1280×720   | 3000k         | 128k          |
 | 480p    | 854×480    | 1500k         | 96k           |
 | 240p    | ~427×240   | 800k          | 64k           |
 | 144p    | ~256×144   | 400k          | 64k           |
-| Source  | Original   | 8000k         | 192k          |
 
 *Note: Only variants with resolution ≤ source video are generated*
 
