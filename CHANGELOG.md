@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 - 2025-10-22
+
+### Changed
+- Source variant is now only added when the source video resolution exceeds 1080p, preventing duplicate resolutions in HLS playlists and reducing storage usage for typical video uploads
+
 ## 1.0.2 - 2025-10-17
 
 ### Fixed
