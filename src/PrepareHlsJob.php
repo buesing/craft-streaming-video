@@ -70,13 +70,15 @@ class PrepareHlsJob extends BaseJob
                     ];
                 }
             }
-            // Always add a "source" variant at the original resolution
-            $variants[] = [
-                'name' => 'source',
-                'maxHeight' => $srcHeight,
-                'video_bitrate' => '8000k', // or estimate
-                'audio_bitrate' => '192k',
-            ];
+            // Only add source variant if source resolution exceeds our max variant height
+            if ($srcHeight > max(self::VARIANT_HEIGHTS)) {
+                $variants[] = [
+                    'name' => 'source',
+                    'maxHeight' => $srcHeight,
+                    'video_bitrate' => '8000k',
+                    'audio_bitrate' => '192k',
+                ];
+            }
 
             $totalSteps = count($variants) + 1; // +1 for master playlist
 
