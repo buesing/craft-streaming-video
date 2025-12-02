@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5 - 2025-12-02
+
+### Changed
+- Video encoding now skips re-processing when only asset metadata (captions, subtitles, poster image) has changed, reducing unnecessary queue jobs and server load
+
 ## 1.0.3 - 2025-10-22
 
 ### Changed

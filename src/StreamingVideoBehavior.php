@@ -3,6 +3,7 @@
 namespace buesing\streamingvideo;
 
 use buesing\streamingvideo\records\ConversionStatusRecord;
+use buesing\streamingvideo\Utilities\VideoFileHasher;
 use Craft;
 use craft\elements\Asset;
 use yii\base\Behavior;
@@ -65,12 +66,23 @@ class StreamingVideoBehavior extends Behavior
     public function afterSave($event): void
     {
         $asset = $this->owner;
-        if ($this->canStreamVideo()) {
-            ConversionStatusRecord::setStatus($asset->id, 'pending');
-            \Craft::$app->queue->push(new \buesing\streamingvideo\PrepareHlsJob([
-                'assetId' => $asset->id,
-            ]));
+        if (! $this->canStreamVideo()) {
+            return;
         }
+
+        $currentHash = VideoFileHasher::computeHash($asset);
+        $status = ConversionStatusRecord::findByAssetId($asset->id);
+
+        if ($status && $status->sourceFileHash === $currentHash) {
+            if ($status->status === 'completed' || $status->status === 'pending' || $status->status === 'processing') {
+                return;
+            }
+        }
+
+        ConversionStatusRecord::setStatus($asset->id, 'pending', $currentHash);
+        \Craft::$app->queue->push(new \buesing\streamingvideo\PrepareHlsJob([
+            'assetId' => $asset->id,
+        ]));
     }
 
     public function afterDelete($event): void

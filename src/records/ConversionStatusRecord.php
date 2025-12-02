@@ -16,7 +16,7 @@ class ConversionStatusRecord extends ActiveRecord
         return static::findOne(['assetId' => $assetId]);
     }
 
-    public static function setStatus(int $assetId, string $status): void
+    public static function setStatus(int $assetId, string $status, ?string $sourceFileHash = null): void
     {
         $record = static::findByAssetId($assetId);
         if (! $record) {
@@ -24,6 +24,9 @@ class ConversionStatusRecord extends ActiveRecord
             $record->assetId = $assetId;
         }
         $record->status = $status;
+        if ($sourceFileHash !== null) {
+            $record->setAttribute('sourceFileHash', $sourceFileHash);
+        }
         $record->save();
     }
 }

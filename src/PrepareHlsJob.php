@@ -3,6 +3,7 @@
 namespace buesing\streamingvideo;
 
 use buesing\streamingvideo\records\ConversionStatusRecord;
+use buesing\streamingvideo\Utilities\VideoFileHasher;
 use Craft;
 use craft\elements\Asset;
 use craft\queue\BaseJob;
@@ -26,6 +27,7 @@ class PrepareHlsJob extends BaseJob
         $asset = null;
         $inputPath = null;
         $tempDir = null;
+        $sourceFileHash = null;
 
         try {
             $asset = Asset::find()->id($this->assetId)->one();
@@ -41,6 +43,7 @@ class PrepareHlsJob extends BaseJob
                 return;
             }
 
+            $sourceFileHash = VideoFileHasher::computeHash($asset);
             ConversionStatusRecord::setStatus($this->assetId, 'processing');
 
             $inputPath = $asset->getCopyOfFile();
@@ -170,7 +173,7 @@ class PrepareHlsJob extends BaseJob
 
             $this->setProgress($queue, 1, 'Master playlist uploaded');
 
-            ConversionStatusRecord::setStatus($this->assetId, 'completed');
+            ConversionStatusRecord::setStatus($this->assetId, 'completed', $sourceFileHash);
 
         } catch (\Throwable $e) {
             Craft::error("PrepareHlsJob failed for asset {$this->assetId}: ".$e->getMessage(), __METHOD__);
