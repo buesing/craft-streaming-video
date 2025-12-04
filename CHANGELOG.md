@@ -1,6 +1,13 @@
 # Changelog
 
-## 1.0.5 - 2025-12-02
+## 1.0.5 - 2025-12-04
+
+### Changed
+- Fixed [#6]: Missing sourceFileHash column in install migration
+
+[#6]: https://github.com/buesing/craft-streaming-video/issues/6
+
+## 1.0.4 - 2025-12-02
 
 ### Changed
 - Fixed [#5]: Video encoding now skips re-processing when only asset metadata (captions, subtitles, poster image) has changed, reducing unnecessary queue jobs and server load

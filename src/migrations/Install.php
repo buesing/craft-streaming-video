@@ -12,6 +12,7 @@ class Install extends Migration
             'id' => $this->primaryKey(),
             'assetId' => $this->integer()->notNull(),
             'status' => $this->enum('status', ['pending', 'processing', 'completed', 'failed'])->notNull()->defaultValue('pending'),
+            'sourceFileHash' => $this->string(32)->null(),
             'dateCreated' => $this->dateTime()->notNull(),
             'dateUpdated' => $this->dateTime()->notNull(),
             'uid' => $this->uid(),
